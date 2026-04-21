@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: notification-service
+  mail:
+    host: smtp.example.com
+    port: 587
+    username: notifications@example.com
+    password: secret
+
+server:
+  port: 8084
