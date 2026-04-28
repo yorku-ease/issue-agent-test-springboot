@@ -27,13 +27,12 @@ public class OrderService {
         order.setUserId(userId);
         order.setProductId(productId);
         order.setQuantity(quantity);
-        order.setStatus("PENDING");
+        order.setStatus("CONFIRMED");
         order.setCreatedAt(LocalDateTime.now());
         return orderRepository.save(order);
     }
 
     public List<Order> getOrdersByUser(Long userId) {
-        // N+1 still present — fixed in later PR
         return orderRepository.findByUserId(userId);
     }
 }
