@@ -3,6 +3,7 @@ package com.example.userservice.service;
 import com.example.userservice.model.User;
 import com.example.userservice.repository.UserRepository;
 import com.example.userservice.security.JwtUtil;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -12,6 +13,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public UserService(UserRepository userRepository, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
@@ -30,10 +32,14 @@ public class UserService {
         }
         User user = new User();
         user.setUsername(username);
-        user.setPassword(password); // plaintext — fixed in PR #8
+        user.setPassword(passwordEncoder.encode(password));
         user.setEmail(email);
         user.setRole("USER");
         return userRepository.save(user);
+    }
+
+    public boolean verifyPassword(String rawPassword, String encodedPassword) {
+        return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 
     public Map<String, String> refreshAccessToken(String refreshToken) {
@@ -41,8 +47,7 @@ public class UserService {
             throw new RuntimeException("Invalid or expired refresh token");
         }
         String username = jwtUtil.extractUsername(refreshToken);
-        String newAccessToken = jwtUtil.generateToken(username);
-        return Map.of("accessToken", newAccessToken);
+        return Map.of("accessToken", jwtUtil.generateToken(username));
     }
 
     public User findByUsername(String username) {
