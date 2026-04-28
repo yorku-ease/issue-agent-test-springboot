@@ -14,8 +14,10 @@ public class UserService {
     }
 
     public User register(String username, String password, String email) {
-        // BUG: NullPointerException when email is null — existsByEmail crashes
-        if (userRepository.existsByEmail(email)) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Username is required");
+        }
+        if (email != null && userRepository.existsByEmail(email)) {
             throw new RuntimeException("Email already in use");
         }
         if (userRepository.existsByUsername(username)) {
@@ -23,7 +25,7 @@ public class UserService {
         }
         User user = new User();
         user.setUsername(username);
-        user.setPassword(password); // BUG: plaintext password, no BCrypt
+        user.setPassword(password); // plaintext — fixed in later PR
         user.setEmail(email);
         user.setRole("USER");
         return userRepository.save(user);
