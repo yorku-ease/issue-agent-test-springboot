@@ -4,7 +4,9 @@ import com.example.orderservice.model.Order;
 import com.example.orderservice.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -25,8 +27,10 @@ public class OrderController {
                 Long.valueOf(request.get("productId").toString()),
                 Integer.valueOf(request.get("quantity").toString())
         );
-        // BUG: should return 201 Created, not 200 OK
-        return ResponseEntity.ok(Map.of("id", order.getId(), "status", order.getStatus()));
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(order.getId()).toUri();
+        return ResponseEntity.created(location)
+                .body(Map.of("id", order.getId(), "status", order.getStatus()));
     }
 
     @GetMapping("/user/{userId}")
