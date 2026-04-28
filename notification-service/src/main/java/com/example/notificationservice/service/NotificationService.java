@@ -3,6 +3,7 @@ package com.example.notificationservice.service;
 import com.example.notificationservice.model.NotificationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -25,9 +26,9 @@ public class NotificationService {
             message.setText(req.getBody());
             mailSender.send(message);
             log.info("Notification sent for order #{}", req.getOrderId());
-        } catch (Exception e) {
-            // BUG: exception is swallowed — email failures are completely silent
-            log.debug("Notification skipped");
+        } catch (MailException e) {
+            log.error("Failed to send notification for order #{}: {}", req.getOrderId(), e.getMessage());
+            throw new RuntimeException("Notification delivery failed for order #" + req.getOrderId(), e);
         }
     }
 }
