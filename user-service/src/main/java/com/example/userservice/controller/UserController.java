@@ -1,7 +1,9 @@
 package com.example.userservice.controller;
 
+import com.example.userservice.dto.RegisterRequest;
 import com.example.userservice.model.User;
 import com.example.userservice.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,13 +19,12 @@ public class UserController {
         this.userService = userService;
     }
 
-    // BUG: no @Valid or DTO — accepts any payload without validation
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         User user = userService.register(
-                request.get("username"),
-                request.get("password"),
-                request.get("email")
+                request.getUsername(),
+                request.getPassword(),
+                request.getEmail()
         );
         return ResponseEntity.ok(Map.of("id", user.getId(), "username", user.getUsername()));
     }
