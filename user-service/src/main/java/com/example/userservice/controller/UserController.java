@@ -2,6 +2,7 @@ package com.example.userservice.controller;
 
 import com.example.userservice.dto.RegisterRequest;
 import com.example.userservice.model.User;
+import com.example.userservice.security.JwtUtil;
 import com.example.userservice.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +15,11 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final JwtUtil jwtUtil;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, JwtUtil jwtUtil) {
         this.userService = userService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/register")
@@ -26,7 +29,19 @@ public class UserController {
                 request.getPassword(),
                 request.getEmail()
         );
-        return ResponseEntity.ok(Map.of("id", user.getId(), "username", user.getUsername()));
+        return ResponseEntity.status(201)
+                .body(Map.of("id", user.getId(), "username", user.getUsername()));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
+        User user = userService.findByUsername(request.get("username"));
+        if (!userService.verifyPassword(request.get("password"), user.getPassword())) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
+        }
+        String token = jwtUtil.generateToken(user.getUsername());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+        return ResponseEntity.ok(Map.of("accessToken", token, "refreshToken", refreshToken));
     }
 
     @GetMapping("/{username}")
