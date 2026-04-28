@@ -5,6 +5,8 @@ import com.example.orderservice.model.Order;
 import com.example.orderservice.repository.OrderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,16 +35,17 @@ public class OrderService {
         order.setStatus("CONFIRMED");
         order.setCreatedAt(LocalDateTime.now());
         Order saved = orderRepository.save(order);
-        try {
-            // notification failure should not roll back the order
-            log.info("Order #{} saved — notification dispatched", saved.getId());
-        } catch (Exception e) {
-            log.warn("Notification failed for order #{}, will retry later: {}", saved.getId(), e.getMessage());
-        }
+        log.info("Order #{} created for user #{}", saved.getId(), userId);
         return saved;
     }
 
     public List<Order> getOrdersByUser(Long userId) {
-        return orderRepository.findByUserId(userId);
+        return getOrdersByUser(userId, 0, 20);
+    }
+
+    public List<Order> getOrdersByUser(Long userId, int page, int size) {
+        Page<Order> result = orderRepository.findByUserIdPaged(
+                userId, PageRequest.of(page, size));
+        return result.getContent();
     }
 }
