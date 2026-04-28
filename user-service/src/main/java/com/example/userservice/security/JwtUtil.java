@@ -25,13 +25,20 @@ public class JwtUtil {
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
-    // BUG: does not check expiry — expired tokens are accepted
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token);
-            return true;
+            Claims claims = Jwts.parser().setSigningKey(SECRET)
+                    .parseClaimsJws(token).getBody();
+            return !claims.getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            return false;
         } catch (JwtException e) {
             return false;
         }
+    }
+
+    public Date getExpiration(String token) {
+        return Jwts.parser().setSigningKey(SECRET)
+                .parseClaimsJws(token).getBody().getExpiration();
     }
 }
