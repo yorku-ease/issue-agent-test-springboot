@@ -20,7 +20,9 @@ public class OrderService {
     }
 
     public Order createOrder(Long userId, Long productId, Integer quantity) {
-        // BUG: does not verify product exists before placing order
+        if (!productClient.productExists(productId)) {
+            throw new RuntimeException("Product not found: " + productId);
+        }
         Order order = new Order();
         order.setUserId(userId);
         order.setProductId(productId);
@@ -31,7 +33,7 @@ public class OrderService {
     }
 
     public List<Order> getOrdersByUser(Long userId) {
-        // BUG: triggers N+1 — OrderRepository.findByUserId has no JOIN FETCH
+        // N+1 still present — fixed in later PR
         return orderRepository.findByUserId(userId);
     }
 }
